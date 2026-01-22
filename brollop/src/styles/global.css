@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+body {
+	background: rgb(248, 243, 234);
+	color: rgb(165, 18, 38);
+	font-family: 'Lora', serif;
+}
+
+html {
+	font-size: 100%;
+}
+
+h1 {
+	font-size: 9rem;
+	text-align: center;
+	font-family: 'Luxurious Script', cursive;
+	font-weight: 400;
+}
+
+h3 {
+	font-size: 2em;
+	text-align: center;
+}
