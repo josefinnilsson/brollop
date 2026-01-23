@@ -1,23 +1,162 @@
 @import 'tailwindcss';
 
 body {
-	background: rgb(248, 243, 234);
-	color: rgb(165, 18, 38);
-	font-family: 'Lora', serif;
+  background: rgb(248, 243, 234);
+  color: rgb(165, 18, 38);
+  font-family: 'Lora', serif;
 }
 
 html {
-	font-size: 100%;
+  font-size: 100%;
 }
 
 h1 {
-	font-size: 9rem;
-	text-align: center;
-	font-family: 'Luxurious Script', cursive;
-	font-weight: 400;
+  font-size: 9rem;
+  text-align: center;
+  font-family: 'Luxurious Script', cursive;
+  font-weight: 400;
+}
+
+h2 {
+  font-size: 2rem;
+  text-align: center;
+  padding-bottom: 1.5rem;
 }
 
 h3 {
-	font-size: 2em;
-	text-align: center;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+p {
+  text-align: center;
+}
+
+.line {
+  padding-top: 5%;
+  border-bottom: 2px solid rgb(165, 18, 38);
+  padding-bottom: 10%;
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+.mobile-title {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 5rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  p {
+    font-size: 1rem;
+  }
+
+  .desktop-title {
+    display: none;
+  }
+
+  .mobile-title {
+    display: block;
+  }
+}
+
+form {
+  max-width: 500px;
+  margin: 0 auto;
+  background-color: rgb(248, 243, 234);
+}
+
+label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin-top: 0.25rem;
+  border: 2px solid rgb(165, 18, 38); /* röd kant */
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+/* Input focus */
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgb(200, 40, 60);
+  box-shadow: 0 0 5px rgba(200, 40, 60, 0.5);
+}
+
+/* Fieldset styling */
+fieldset {
+  border: none;
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+legend {
+  margin-bottom: 0.5rem;
+}
+
+input[type='radio'] {
+  margin-right: 0.5rem;
+}
+
+button {
+  background-color: rgb(165, 18, 38);
+  color: rgb(248, 243, 234);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: rgb(200, 40, 60);
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+}
+
+input[type='radio'] {
+  margin-right: 0.3rem;
+}
+
+button {
+  width: 100%;
+  margin: 1rem 0 0;
+}
+
+input[type='radio'] {
+  accent-color: rgb(165, 18, 38); /* den röda färgen */
+}
+
+fieldset {
+  margin-bottom: 0;
 }
