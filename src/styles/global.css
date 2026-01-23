@@ -26,6 +26,8 @@ h2 {
 h3 {
   font-size: 1.5rem;
   text-align: center;
+  padding-bottom: 0.5rem;
+  padding-top: 1rem;
 }
 
 p {
@@ -38,6 +40,11 @@ p {
   padding-bottom: 10%;
   padding-left: 5%;
   padding-right: 5%;
+}
+
+.content {
+  max-width: 750px;
+  margin: 0 auto;
 }
 
 .mobile-title {
@@ -159,4 +166,29 @@ input[type='radio'] {
 
 fieldset {
   margin-bottom: 0;
+}
+
+.language-switcher {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-weight: bold;
+  font-size: 1rem;
+  z-index: 1000;
+}
+
+/* Länken i sig får ingen färg */
+.language-switcher a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Aktivt språk: mörkrött */
+.language-switcher span.active {
+  color: rgb(165, 18, 38);
+}
+
+/* Inaktivt språk: ljusrött */
+.language-switcher span.inactive {
+  color: rgb(235, 100, 120);
 }
