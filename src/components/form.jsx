@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 export default function Form() {
   const [state, handleSubmit] = useForm('xgoaeazk');
-  const [hasGuest, setHasGuest] = useState(false);
+  const [guests, setGuests] = useState(1);
 
   if (state.succeeded) {
     return <p>Tack för din anmälan!</p>;
@@ -11,70 +11,82 @@ export default function Form() {
 
   return (
     <form onSubmit={handleSubmit} method="POST">
-      <label>
-        Namn
-        <input type="text" name="namn" required />
-      </label>
-
-      <label>
-        E-post
-        <input type="email" name="email" required />
-      </label>
-
-      <label>
-        Telefonnummer
-        <input
-          type="tel"
-          name="telefon"
-          pattern="[0-9 +()-]{6,}"
-          title="Ange ett giltigt telefonnummer"
-        />
-      </label>
-
-      <label>
-        Önskar du någon specialkost?
-        <textarea name="specialkost" />
-      </label>
-
       <fieldset>
-        <legend>Tar du med dig ett sällskap?</legend>
+        <legend>Antal gäster</legend>
 
         <div className="radio-group">
           <label>
             <input
               type="radio"
-              name="sallskap"
-              value="Ja"
-              required
-              onChange={() => setHasGuest(true)}
+              name="antal_gaster"
+              value="1"
+              checked={guests === 1}
+              onChange={() => setGuests(1)}
             />
-            Ja
+            En person
           </label>
 
           <label>
             <input
               type="radio"
-              name="sallskap"
-              value="Nej"
-              onChange={() => setHasGuest(false)}
+              name="antal_gaster"
+              value="2"
+              checked={guests === 2}
+              onChange={() => setGuests(2)}
             />
-            Nej
+            Två personer
           </label>
         </div>
       </fieldset>
 
-      {hasGuest && (
-        <>
+      <fieldset>
+        <legend>Gäst 1</legend>
+
+        <label>
+          Namn
+          <input type="text" name="gast1_namn" required />
+        </label>
+
+        <label>
+          Telefon
+          <input type="tel" name="gast1_telefon" />
+        </label>
+
+        <label>
+          E-post
+          <input type="email" name="gast1_epost" required />
+        </label>
+
+        <label>
+          Eventuell specialkost
+          <input type="text" name="gast1_specialkost" />
+        </label>
+      </fieldset>
+
+      {guests === 2 && (
+        <fieldset>
+          <legend>Gäst 2</legend>
+
           <label>
-            Namn på gästen
-            <input type="text" name="gast_namn" required />
+            Namn
+            <input type="text" name="gast2_namn" required />
           </label>
 
           <label>
-            Specialkost för gästen
-            <textarea name="gast_specialkost" />
+            Telefon
+            <input type="tel" name="gast2_telefon" />
           </label>
-        </>
+
+          <label>
+            E-post
+            <input type="email" name="gast2_epost" required />
+          </label>
+
+          <label>
+            Eventuell specialkost
+            <input type="text" name="gast2_specialkost" />
+          </label>
+        </fieldset>
       )}
 
       <button type="submit">Skicka in svar</button>

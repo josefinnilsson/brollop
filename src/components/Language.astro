@@ -3,7 +3,7 @@ const { currentLang = 'sv' } = Astro.props;
 ---
 
 <nav class="language-switcher">
-  <a href={currentLang === 'sv' ? '/nl/' : '/sv/'}>
+  <a href={currentLang === 'sv' ? '/brollop/nl/' : '/brollop/sv/'}>
     <span class={currentLang === 'sv' ? 'active' : 'inactive'}>SV</span>/<span
       class={currentLang === 'nl' ? 'active' : 'inactive'}>NL</span
     >

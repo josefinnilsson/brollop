@@ -20,7 +20,7 @@ h1 {
 h2 {
   font-size: 2rem;
   text-align: center;
-  padding-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 
 h3 {
@@ -49,6 +49,9 @@ p {
 
 .mobile-title {
   display: none;
+  h2 {
+    padding-bottom: 0;
+  }
 }
 
 @media (max-width: 768px) {
@@ -66,6 +69,8 @@ p {
 
   p {
     font-size: 1rem;
+    text-align: justify;
+    text-align-last: center;
   }
 
   .desktop-title {
@@ -161,7 +166,7 @@ button {
 }
 
 input[type='radio'] {
-  accent-color: rgb(165, 18, 38); /* den röda färgen */
+  accent-color: rgb(165, 18, 38);
 }
 
 fieldset {
@@ -177,18 +182,15 @@ fieldset {
   z-index: 1000;
 }
 
-/* Länken i sig får ingen färg */
 .language-switcher a {
   text-decoration: none;
   color: inherit;
 }
 
-/* Aktivt språk: mörkrött */
 .language-switcher span.active {
   color: rgb(165, 18, 38);
 }
 
-/* Inaktivt språk: ljusrött */
 .language-switcher span.inactive {
   color: rgb(235, 100, 120);
 }
