@@ -34,6 +34,14 @@ p {
   text-align: center;
 }
 
+.names span {
+  display: block;
+}
+
+.names {
+  line-height: 1;
+}
+
 .line {
   padding-top: 5%;
   border-bottom: 2px solid rgb(165, 18, 38);
@@ -54,9 +62,14 @@ p {
   }
 }
 
+body {
+  overflow-x: hidden;
+}
+
 @media (max-width: 768px) {
   h1 {
     font-size: 5rem;
+    margin: 0;
   }
 
   h2 {

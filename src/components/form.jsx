@@ -61,6 +61,23 @@ export default function Form() {
           Eventuell specialkost
           <input type="text" name="gast1_specialkost" />
         </label>
+        <legend>Dryckespreferens</legend>
+
+        <div className="radio-group">
+          <label>
+            <input type="radio" name="gast1_dryckespreferens" value="alkohol" />
+            Alkohol
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="gast1_dryckespreferens"
+              value="alkoholfritt"
+            />
+            Alkoholfritt
+          </label>
+        </div>
       </fieldset>
 
       {guests === 2 && (
@@ -86,10 +103,32 @@ export default function Form() {
             Eventuell specialkost
             <input type="text" name="gast2_specialkost" />
           </label>
+
+          <legend>Dryckespreferens</legend>
+
+          <div className="radio-group">
+            <label>
+              <input
+                type="radio"
+                name="gast2_dryckespreferens"
+                value="alkohol"
+              />
+              Alkohol
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="gast2_dryckespreferens"
+                value="alkoholfritt"
+              />
+              Alkoholfritt
+            </label>
+          </div>
         </fieldset>
       )}
 
-      <button type="submit">Skicka in svar</button>
+      <button type="submit">Skicka</button>
     </form>
   );
 }
