@@ -40,7 +40,7 @@ export default function Form() {
       </fieldset>
 
       <fieldset>
-        <legend>Gäst 1</legend>
+        <legend></legend>
 
         <label>
           Namn
@@ -80,9 +80,11 @@ export default function Form() {
         </div>
       </fieldset>
 
+      <hr />
+
       {guests === 2 && (
         <fieldset>
-          <legend>Gäst 2</legend>
+          <legend></legend>
 
           <label>
             Namn
