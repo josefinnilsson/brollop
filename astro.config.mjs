@@ -13,5 +13,5 @@ export default defineConfig({
 
   integrations: [react()],
   site: 'https://josefinnilsson.github.io',
-  base: '/brollop/',
+  base: '/',
 });
