@@ -43,7 +43,7 @@ export default function FormNL() {
         <legend></legend>
 
         <label>
-          Naame
+          Naam
           <input type="text" name="gast1_namn" required />
         </label>
 
@@ -130,7 +130,7 @@ export default function FormNL() {
         </fieldset>
       )}
 
-      <button type="submit">Skicka</button>
+      <button type="submit">Versturen</button>
     </form>
   );
 }
