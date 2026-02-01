@@ -12,7 +12,7 @@ export default function FormNL() {
   return (
     <form onSubmit={handleSubmit} method="POST">
       <fieldset>
-        <legend>Antal gäster</legend>
+        <legend>Aantal gasten</legend>
 
         <div className="radio-group">
           <label>
@@ -23,7 +23,7 @@ export default function FormNL() {
               checked={guests === 1}
               onChange={() => setGuests(1)}
             />
-            En person
+            Eén person
           </label>
 
           <label>
@@ -34,7 +34,7 @@ export default function FormNL() {
               checked={guests === 2}
               onChange={() => setGuests(2)}
             />
-            Två personer
+            Twee personer
           </label>
         </div>
       </fieldset>
@@ -43,30 +43,30 @@ export default function FormNL() {
         <legend></legend>
 
         <label>
-          Namn
+          Naame
           <input type="text" name="gast1_namn" required />
         </label>
 
         <label>
-          Telefon
+          Telefoonnummer
           <input type="tel" name="gast1_telefon" />
         </label>
 
         <label>
-          E-post
+          E-mail
           <input type="email" name="gast1_epost" required />
         </label>
 
         <label>
-          Eventuell specialkost
+          Eventueel speciaal dieet
           <input type="text" name="gast1_specialkost" />
         </label>
-        <legend>Dryckespreferens</legend>
+        <legend>Drank preferencies</legend>
 
         <div className="radio-group">
           <label>
             <input type="radio" name="gast1_dryckespreferens" value="alkohol" />
-            Alkohol
+            Alcohol 
           </label>
 
           <label>
@@ -75,7 +75,7 @@ export default function FormNL() {
               name="gast1_dryckespreferens"
               value="alkoholfritt"
             />
-            Alkoholfritt
+            Alcoholvrij
           </label>
         </div>
       </fieldset>
@@ -87,26 +87,26 @@ export default function FormNL() {
           <legend></legend>
 
           <label>
-            Namn
+            Naam
             <input type="text" name="gast2_namn" required />
           </label>
 
           <label>
-            Telefon
+            Telefoonnummer
             <input type="tel" name="gast2_telefon" />
           </label>
 
           <label>
-            E-post
+            E-email
             <input type="email" name="gast2_epost" required />
           </label>
 
           <label>
-            Eventuell specialkost
+            Eventueel speciaal dieet
             <input type="text" name="gast2_specialkost" />
           </label>
 
-          <legend>Dryckespreferens</legend>
+          <legend>Drank preferencies</legend>
 
           <div className="radio-group">
             <label>
@@ -115,7 +115,7 @@ export default function FormNL() {
                 name="gast2_dryckespreferens"
                 value="alkohol"
               />
-              Alkohol
+              Alcohol 
             </label>
 
             <label>
@@ -124,7 +124,7 @@ export default function FormNL() {
                 name="gast2_dryckespreferens"
                 value="alkoholfritt"
               />
-              Alkoholfritt
+              Alcoholvrij
             </label>
           </div>
         </fieldset>
