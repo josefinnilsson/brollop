@@ -13,7 +13,7 @@ html {
 h1 {
   font-size: 9rem;
   text-align: center;
-  font-family: 'Alice', serif;
+  font-family: 'Alice', cursive;
   font-weight: 400;
   padding-bottom: 1rem;
 }
@@ -73,8 +73,8 @@ hr {
 
 @media (max-width: 768px) {
   h1 {
-    font-size: 5rem;
-    margin: 0;
+    padding-top: 2rem;
+    font-size: 3.25rem;
   }
 
   h2 {
