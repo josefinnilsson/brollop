@@ -11,7 +11,7 @@ html {
 }
 
 h1 {
-  font-size: 9rem;
+  font-size: 10rem;
   text-align: center;
   font-family: 'Alice', cursive;
   font-weight: 400;
@@ -74,7 +74,7 @@ hr {
 @media (max-width: 768px) {
   h1 {
     padding-top: 2rem;
-    font-size: 3.25rem;
+    font-size: 4rem;
   }
 
   h2 {
