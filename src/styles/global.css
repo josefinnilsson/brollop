@@ -88,8 +88,7 @@ hr {
 
   p {
     font-size: 1rem;
-    text-align: justify;
-    text-align-last: center;
+    text-align: center;
   }
 
   .desktop-title {
@@ -98,6 +97,11 @@ hr {
 
   .mobile-title {
     display: block;
+  }
+
+  .line {
+    padding-left: 2.5%;
+    padding-right: 2.5%;
   }
 }
 
@@ -119,13 +123,12 @@ textarea {
   width: 100%;
   padding: 0.6rem 0.8rem;
   margin-top: 0.25rem;
-  border: 2px solid rgb(165, 18, 38); /* röd kant */
+  border: 2px solid rgb(165, 18, 38);
   border-radius: 4px;
   font-size: 1rem;
   box-sizing: border-box;
 }
 
-/* Input focus */
 input:focus,
 textarea:focus {
   outline: none;
@@ -133,7 +136,6 @@ textarea:focus {
   box-shadow: 0 0 5px rgba(200, 40, 60, 0.5);
 }
 
-/* Fieldset styling */
 fieldset {
   border: none;
   margin-bottom: 1rem;

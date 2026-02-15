@@ -66,7 +66,7 @@ export default function FormNL() {
         <div className="radio-group">
           <label>
             <input type="radio" name="gast1_dryckespreferens" value="alkohol" />
-            Alcohol 
+            Alcohol
           </label>
 
           <label>
@@ -80,10 +80,9 @@ export default function FormNL() {
         </div>
       </fieldset>
 
-      <hr />
-
       {guests === 2 && (
         <fieldset>
+          <hr />
           <legend></legend>
 
           <label>
@@ -115,7 +114,7 @@ export default function FormNL() {
                 name="gast2_dryckespreferens"
                 value="alkohol"
               />
-              Alcohol 
+              Alcohol
             </label>
 
             <label>

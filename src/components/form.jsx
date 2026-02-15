@@ -80,10 +80,9 @@ export default function Form() {
         </div>
       </fieldset>
 
-      <hr />
-
       {guests === 2 && (
         <fieldset>
+          <hr />
           <legend></legend>
 
           <label>
