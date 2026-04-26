@@ -35,6 +35,11 @@ p {
   text-align: center;
 }
 
+.subtitle {
+  font-style: italic;
+  padding-bottom: 2%;
+}
+
 .names span {
   display: block;
 }
