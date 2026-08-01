@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Language from '../components/Language.astro';
+import SeatingMap from '../components/SeatingMap';
+---
+
+<Language currentLang="sv" />
+<Layout>
+  <div class="line">
+    <h1 class="names">
+      <span>Josefin</span>
+      <span>&amp; Oscar</span>
+    </h1>
+    <div class="desktop-title"><h2>19 september 2026 | Stockholm</h2></div>
+    <div class="mobile-title"><h2>19 september 2026</h2><h2>Stockholm</h2></div>
+  </div>
+</Layout>
+
+<div class="line">
+  <SeatingMap client:load />
+</div>

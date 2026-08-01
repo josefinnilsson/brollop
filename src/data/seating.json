@@ -1,0 +1,38 @@
+[
+  {
+    "table": "Bord 1",
+    "guests": ["Josefin", "Oscar", "Marlene", "jos", "Anette", "Micke", "Jonas", "Jeanette"]
+  },
+  {
+    "table": "Bord 2",
+    "guests": []
+  },
+  {
+    "table": "Bord 3",
+    "guests": []
+  },
+  {
+    "table": "Bord 4",
+    "guests": []
+  },
+  {
+    "table": "Bord 5",
+    "guests": []
+  },
+  {
+    "table": "Bord 6",
+    "guests": []
+  },
+  {
+    "table": "Bord 7",
+    "guests": []
+  },
+  {
+    "table": "Bord 8",
+    "guests": []
+  },
+  {
+    "table": "Bord 9",
+    "guests": []
+  }
+]

@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Language from '../components/Language.astro';
+import SeatingAdmin from '../components/SeatingAdmin';
+---
+
+<Language currentLang="sv" />
+<Layout>
+  <div class="line">
+    <h1 class="names">
+      <span>Josefin</span>
+      <span>&amp; Oscar</span>
+    </h1>
+  </div>
+</Layout>
+
+<div class="line">
+  <SeatingAdmin client:load />
+</div>
