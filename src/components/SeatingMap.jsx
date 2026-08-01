@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const PRIMARY = 'rgb(165, 18, 38)';
 const CREAM = 'rgb(248, 243, 234)';
@@ -154,7 +154,7 @@ export default function SeatingMap() {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    supabase
+    getSupabase()
       .from('seating')
       .select('id, table_name, guests')
       .order('id')

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const ADMIN_PASSWORD = import.meta.env.PUBLIC_ADMIN_PASSWORD;
 const PRIMARY = 'rgb(165, 18, 38)';
@@ -189,7 +189,7 @@ export default function SeatingAdmin() {
 
   useEffect(() => {
     if (!authed) return;
-    supabase.from('seating').select('id, table_name, guests').order('id').then(({ data }) => {
+    getSupabase().from('seating').select('id, table_name, guests').order('id').then(({ data }) => {
       if (data) {
         setTables(data.map((r, i) => {
           const seats = SEAT_COUNTS[i] ?? 10;
@@ -238,7 +238,7 @@ export default function SeatingAdmin() {
   async function save() {
     setSaving(true);
     for (const table of tables) {
-      await supabase.from('seating').update({ guests: table.guests.map(g => g.trim()) }).eq('id', table.id);
+      await getSupabase().from('seating').update({ guests: table.guests.map(g => g.trim()) }).eq('id', table.id);
     }
     setSaving(false); setSaved(true);
   }
