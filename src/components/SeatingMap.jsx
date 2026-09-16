@@ -75,59 +75,56 @@ const TABLE_LAYOUT = [
   { idx: 8, cx: 1550, cy: 1740, type: 'guest8', dir:  1 },
 ];
 
-const CHARS_PER_LINE = 18;
-
-function lineCount(text, charsPerLine = CHARS_PER_LINE) {
-  return Math.max(1, Math.ceil(text.length / charsPerLine));
-}
-
-function chipHeight(guest, dietary) {
-  const nameLines = lineCount(guest);
-  const dietLines = dietary ? lineCount(dietary, 22) : 0;
-  return 12 + nameLines * 22 + (dietLines > 0 ? 4 + dietLines * 18 : 0);
+function wrapText(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? current + ' ' + word : word;
+    if (candidate.length <= maxChars) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [text];
 }
 
 function SeatChip({ chair, cx, cy, guest, dietary, highlighted }) {
   if (!guest) return null;
   const W = 160;
-  const H = chipHeight(guest, dietary);
+  const nameLines = wrapText(guest, 16);
+  const dietLines = dietary ? wrapText(dietary, 20) : [];
+  const H = 12 + nameLines.length * 22 + (dietLines.length > 0 ? 4 + dietLines.length * 18 : 0);
   const pos = chipPos(chair, cx, cy);
   const x = pos.anchor === 'end' ? pos.x - W : pos.anchor === 'start' ? pos.x : pos.x - W / 2;
   const y = pos.y - H / 2;
 
   return (
-    <foreignObject x={x} y={y} width={W} height={H} style={{ overflow: 'visible' }}>
-      <div style={{
-        width: '100%', height: '100%',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        boxSizing: 'border-box',
-        border: highlighted ? `2.5px solid ${PRIMARY}` : `1.5px solid ${PRIMARY}`,
-        borderRadius: '4px',
-        background: highlighted ? HIGHLIGHT_FILL : dietary ? 'rgba(165,18,38,0.08)' : 'rgba(165,18,38,0.04)',
-        padding: '4px 8px',
-        gap: '2px',
-      }}>
-        <span style={{
-          fontFamily: 'Lora, serif', fontSize: '13px',
-          color: PRIMARY, fontWeight: highlighted ? '700' : '400',
-          textAlign: 'center', wordBreak: 'break-word',
-          maxWidth: '144px',
-        }}>
-          {guest}
-        </span>
-        {dietary && (
-          <span style={{
-            fontFamily: 'Lora, serif', fontSize: '11px',
-            color: PRIMARY, fontStyle: 'italic', opacity: 0.8,
-            textAlign: 'center', wordBreak: 'break-word',
-            maxWidth: '144px',
-          }}>
-            {dietary}
-          </span>
-        )}
-      </div>
-    </foreignObject>
+    <g>
+      <rect x={x} y={y} width={W} height={H} rx={4}
+        fill={highlighted ? HIGHLIGHT_FILL : dietary ? 'rgba(165,18,38,0.08)' : 'rgba(165,18,38,0.04)'}
+        stroke={PRIMARY} strokeWidth={highlighted ? 2.5 : 1.5}
+      />
+      {nameLines.map((line, i) => (
+        <text key={`n${i}`}
+          x={x + W / 2} y={y + 6 + i * 22 + 11}
+          textAnchor="middle" dominantBaseline="central"
+          fontFamily="Lora, serif" fontSize={13}
+          fill={PRIMARY} fontWeight={highlighted ? '700' : '400'}
+        >{line}</text>
+      ))}
+      {dietLines.map((line, i) => (
+        <text key={`d${i}`}
+          x={x + W / 2} y={y + 6 + nameLines.length * 22 + 4 + i * 18 + 9}
+          textAnchor="middle" dominantBaseline="central"
+          fontFamily="Lora, serif" fontSize={11}
+          fill={PRIMARY} fontStyle="italic" opacity={0.8}
+        >{line}</text>
+      ))}
+    </g>
   );
 }
 
