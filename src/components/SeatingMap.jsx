@@ -3,7 +3,7 @@ import { getSupabase } from '../lib/supabase';
 
 const PRIMARY = 'rgb(165, 18, 38)';
 const CREAM = 'rgb(248, 243, 234)';
-const TABLE_FILL_ACTIVE = 'rgba(165, 18, 38, 0.12)';
+const HIGHLIGHT_FILL = 'rgba(165, 18, 38, 0.12)';
 
 function normalize(str) {
   return str.toLowerCase().trim();
@@ -16,7 +16,6 @@ function rotated(dx, dy, dir = 1) {
   return [dx * cos45 - dir * dy * sin45, dir * dx * sin45 + dy * cos45];
 }
 
-// 10 chairs around a 160×260 rect rotated ±45°
 function chairs45(cx, cy, dir = 1) {
   const offsets = [
     [-45, -152], [45, -152],
@@ -30,13 +29,12 @@ function chairs45(cx, cy, dir = 1) {
   });
 }
 
-// 8 chairs around a 160×260 rect rotated ±45° (2 per side)
 function chairs45_8(cx, cy, dir = 1) {
   const offsets = [
     [-45, -152], [45, -152],
     [-45,  152], [45,  152],
-    [-102, -45], [-102, 45],
-    [ 102, -45], [ 102, 45],
+    [-102, -65], [-102, 65],
+    [ 102, -65], [ 102, 65],
   ];
   return offsets.map(([dx, dy]) => {
     const [rx, ry] = rotated(dx, dy, dir);
@@ -44,21 +42,16 @@ function chairs45_8(cx, cy, dir = 1) {
   });
 }
 
-// 8 chairs around a 220×130 head table
 function chairsHead(cx, cy) {
   return [
-    { x: cx - 45, y: cy - 87 },
-    { x: cx + 45, y: cy - 87 },
-    { x: cx - 45, y: cy + 87 },
-    { x: cx + 45, y: cy + 87 },
-    { x: cx - 132, y: cy - 35 },
-    { x: cx - 132, y: cy + 35 },
-    { x: cx + 132, y: cy - 35 },
-    { x: cx + 132, y: cy + 35 },
+    { x: cx - 45, y: cy - 87 }, { x: cx + 45, y: cy - 87 },
+    { x: cx - 45, y: cy + 87 }, { x: cx + 45, y: cy + 87 },
+    { x: cx - 132, y: cy - 35 }, { x: cx - 132, y: cy + 35 },
+    { x: cx + 132, y: cy - 35 }, { x: cx + 132, y: cy + 35 },
   ];
 }
 
-function nameLabel(chair, cx, cy) {
+function chipPos(chair, cx, cy) {
   const dx = chair.x - cx;
   const dy = chair.y - cy;
   const len = Math.sqrt(dx * dx + dy * dy);
@@ -67,13 +60,11 @@ function nameLabel(chair, cx, cy) {
     x: chair.x + (dx / len) * offset,
     y: chair.y + (dy / len) * offset,
     anchor: dx < -10 ? 'end' : dx > 10 ? 'start' : 'middle',
-    baseline: dy < -10 ? 'auto' : dy > 10 ? 'hanging' : 'middle',
   };
 }
 
-// Wide layout — left tables cx=250, right cx=1550, generous row spacing
 const TABLE_LAYOUT = [
-  { idx: 0, cx:  900, cy:  430, type: 'head', dir:  1 },
+  { idx: 0, cx:  900, cy:  430, type: 'head',  dir:  1 },
   { idx: 1, cx:  250, cy:  200, type: 'guest', dir: -1 },
   { idx: 2, cx: 1550, cy:  200, type: 'guest', dir:  1 },
   { idx: 3, cx:  250, cy:  700, type: 'guest', dir: -1 },
@@ -81,69 +72,125 @@ const TABLE_LAYOUT = [
   { idx: 5, cx:  250, cy: 1220, type: 'guest', dir: -1 },
   { idx: 6, cx: 1550, cy: 1220, type: 'guest', dir:  1 },
   { idx: 7, cx:  250, cy: 1740, type: 'guest', dir: -1 },
-  { idx: 8, cx: 1550, cy: 1740, type: 'guest', dir:  1 },
+  { idx: 8, cx: 1550, cy: 1740, type: 'guest8', dir:  1 },
 ];
 
-function GuestLabels({ chairs, guests, cx, cy }) {
-  return chairs.map((c, i) => {
-    const guest = guests[i];
-    if (!guest) return null;
-    const { x, y, anchor, baseline } = nameLabel(c, cx, cy);
-    return (
-      <text key={i} x={x} y={y}
-        textAnchor={anchor} dominantBaseline={baseline}
-        fontSize={26} fontFamily="Lora, serif" fill={PRIMARY}>
-        {guest}
-      </text>
-    );
+const CHARS_PER_LINE = 18;
+
+function lineCount(text, charsPerLine = CHARS_PER_LINE) {
+  return Math.max(1, Math.ceil(text.length / charsPerLine));
+}
+
+function chipHeight(guest, dietary) {
+  const nameLines = lineCount(guest);
+  const dietLines = dietary ? lineCount(dietary, 22) : 0;
+  return 12 + nameLines * 22 + (dietLines > 0 ? 4 + dietLines * 18 : 0);
+}
+
+function SeatChip({ chair, cx, cy, guest, dietary, highlighted }) {
+  if (!guest) return null;
+  const W = 160;
+  const H = chipHeight(guest, dietary);
+  const pos = chipPos(chair, cx, cy);
+  const x = pos.anchor === 'end' ? pos.x - W : pos.anchor === 'start' ? pos.x : pos.x - W / 2;
+  const y = pos.y - H / 2;
+
+  return (
+    <foreignObject x={x} y={y} width={W} height={H} style={{ overflow: 'visible' }}>
+      <div style={{
+        width: '100%', height: '100%',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        boxSizing: 'border-box',
+        border: highlighted ? `2.5px solid ${PRIMARY}` : `1.5px solid ${PRIMARY}`,
+        borderRadius: '4px',
+        background: highlighted ? HIGHLIGHT_FILL : dietary ? 'rgba(165,18,38,0.08)' : 'rgba(165,18,38,0.04)',
+        padding: '4px 8px',
+        gap: '2px',
+      }}>
+        <span style={{
+          fontFamily: 'Lora, serif', fontSize: '13px',
+          color: PRIMARY, fontWeight: highlighted ? '700' : '400',
+          textAlign: 'center', wordBreak: 'break-word',
+          maxWidth: '144px',
+        }}>
+          {guest}
+        </span>
+        {dietary && (
+          <span style={{
+            fontFamily: 'Lora, serif', fontSize: '11px',
+            color: PRIMARY, fontStyle: 'italic', opacity: 0.8,
+            textAlign: 'center', wordBreak: 'break-word',
+            maxWidth: '144px',
+          }}>
+            {dietary}
+          </span>
+        )}
+      </div>
+    </foreignObject>
+  );
+}
+
+function perimeterGaps(chairs, cx, cy) {
+  const sorted = chairs
+    .map((c, i) => ({ c, i, angle: Math.atan2(c.y - cy, c.x - cx) }))
+    .sort((a, b) => a.angle - b.angle);
+  return sorted.map((item, pi) => {
+    const next = sorted[(pi + 1) % sorted.length];
+    return {
+      seatIdx: item.i,
+      mid: { x: (item.c.x + next.c.x) / 2, y: (item.c.y + next.c.y) / 2 },
+    };
   });
 }
 
-function DiamondTable({ layout, data, active }) {
-  const { cx, cy, dir = 1, seats = 10 } = layout;
-  const fill = active ? TABLE_FILL_ACTIVE : CREAM;
-  const sw = active ? 3 : 2;
-  const chairList = chairs45(cx, cy, dir);
-
+function HighchairMarker({ mid }) {
   return (
     <g>
-      {chairList.map((c, i) => (
-        <circle key={i} cx={c.x} cy={c.y} r={20} fill={fill} stroke={PRIMARY} strokeWidth={2} />
-      ))}
-      <rect
-        x={cx - 80} y={cy - 130} width={160} height={260} rx={4}
-        fill={fill} stroke={PRIMARY} strokeWidth={sw}
-        transform={`rotate(${dir * 45}, ${cx}, ${cy})`}
-      />
-      <text x={cx} y={cy + 9} textAnchor="middle"
-        fontSize={22} fontFamily="Lora, serif" fill={PRIMARY} fontWeight="700">
-        {data.table}
-      </text>
-      <GuestLabels chairs={chairList} guests={data.guests} cx={cx} cy={cy} />
+      <circle cx={mid.x} cy={mid.y} r={14} fill={PRIMARY} stroke={PRIMARY} strokeWidth={1.5} />
+      <text x={mid.x} y={mid.y + 5} textAnchor="middle" fontSize={16} style={{ userSelect: 'none' }}>👶</text>
     </g>
   );
 }
 
-function HeadTable({ layout, data, active }) {
-  const { cx, cy } = layout;
-  const fill = active ? TABLE_FILL_ACTIVE : CREAM;
+
+function TableGroup({ layout, data, active }) {
+  const { cx, cy, dir = 1, type } = layout;
+  const fill = active ? HIGHLIGHT_FILL : CREAM;
   const sw = active ? 3 : 2;
-  const chairList = chairsHead(cx, cy);
+  const chairList = type === 'head' ? chairsHead(cx, cy) : type === 'guest8' ? chairs45_8(cx, cy, dir) : chairs45(cx, cy, dir);
 
   return (
     <g>
       {chairList.map((c, i) => (
         <circle key={i} cx={c.x} cy={c.y} r={20} fill={fill} stroke={PRIMARY} strokeWidth={2} />
       ))}
-      <rect
-        x={cx - 110} y={cy - 65} width={220} height={130} rx={4}
-        fill={fill} stroke={PRIMARY} strokeWidth={sw}
-      />
+      {type === 'head' ? (
+        <rect x={cx - 110} y={cy - 65} width={220} height={130} rx={4}
+          fill={fill} stroke={PRIMARY} strokeWidth={sw} />
+      ) : (
+        <rect x={cx - 80} y={cy - 130} width={160} height={260} rx={4}
+          fill={fill} stroke={PRIMARY} strokeWidth={sw}
+          transform={`rotate(${dir * 45}, ${cx}, ${cy})`} />
+      )}
       <text x={cx} y={cy + 9} textAnchor="middle"
         fontSize={22} fontFamily="Lora, serif" fill={PRIMARY} fontWeight="700">
         {data.table}
       </text>
-      <GuestLabels chairs={chairList} guests={data.guests} cx={cx} cy={cy} />
+      {chairList.map((chair, i) => (
+        <SeatChip
+          key={i}
+          chair={chair} cx={cx} cy={cy}
+          guest={data.seats[i]?.name ?? ''}
+          dietary={data.seats[i]?.dietary ?? ''}
+          highlighted={active}
+        />
+      ))}
+      {perimeterGaps(chairList, cx, cy).map((gap) =>
+        data.seats[gap.seatIdx]?.highchairAfter
+          ? <HighchairMarker key={`hc-${gap.seatIdx}`} mid={gap.mid} />
+          : null
+      )}
     </g>
   );
 }
@@ -156,10 +203,13 @@ export default function SeatingMap() {
   useEffect(() => {
     getSupabase()
       .from('seating')
-      .select('id, table_name, guests')
+      .select('id, table_name, seat_data')
       .order('id')
       .then(({ data }) => {
-        if (data) setSeating(data.map((r) => ({ table: r.table_name, guests: r.guests ?? [] })));
+        if (data) setSeating(data.map((r) => ({
+          table: r.table_name,
+          seats: r.seat_data ?? [],
+        })));
         setLoading(false);
       });
   }, []);
@@ -174,8 +224,8 @@ export default function SeatingMap() {
     if (query.length < 2) return null;
     const q = normalize(query);
     for (let i = 0; i < seating.length; i++) {
-      const match = seating[i].guests.find((g) => normalize(g).includes(q));
-      if (match) return { guestName: match, tableIdx: i };
+      const match = seating[i].seats.find((s) => normalize(s.name).includes(q));
+      if (match) return { guestName: match.name, tableIdx: i };
     }
     return 'not-found';
   })();
@@ -194,7 +244,7 @@ export default function SeatingMap() {
             placeholder="Sök ditt namn..."
             autoComplete="off"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIdx(null); }}
+            onChange={(e) => setQuery(e.target.value)}
             className="seating-search"
           />
           {searchResult === 'not-found' && (
@@ -216,18 +266,20 @@ export default function SeatingMap() {
           style={{ width: '100%', minWidth: '700px', display: 'block' }}
         >
           <rect x={-120} y={-60} width={2040} height={2100} fill={CREAM} />
-
           {TABLE_LAYOUT.map((layout) => {
             if (!seating[layout.idx]) return null;
-            const data = seating[layout.idx];
-            const active = highlightIdx === layout.idx;
-            const props = { layout, data, active };
-            return layout.type === 'head'
-              ? <HeadTable key={layout.idx} {...props} />
-              : <DiamondTable key={layout.idx} {...props} />;
+            return (
+              <TableGroup
+                key={layout.idx}
+                layout={layout}
+                data={seating[layout.idx]}
+                active={highlightIdx === layout.idx}
+              />
+            );
           })}
         </svg>
       </div>
+
     </div>
   );
 }

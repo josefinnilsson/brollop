@@ -402,6 +402,54 @@ fieldset {
   font-style: italic;
 }
 
+.dietary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .dietary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dietary-card {
+  border: 2px solid rgb(165, 18, 38);
+  border-radius: 4px;
+  padding: 1.25rem;
+}
+
+.dietary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dietary-list li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(165, 18, 38, 0.2);
+  text-align: left;
+}
+
+.dietary-list li:last-child {
+  border-bottom: none;
+}
+
+.dietary-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dietary-note {
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
 .language-switcher {
   position: absolute;
   top: 1rem;
