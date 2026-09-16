@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getSupabase } from '../lib/supabase';
 
 const ADMIN_PASSWORD = import.meta.env.PUBLIC_ADMIN_PASSWORD;
 const PRIMARY = 'rgb(165, 18, 38)';
 const CREAM = 'rgb(248, 243, 234)';
 
-const SEAT_COUNTS = [8, 10, 10, 10, 10, 10, 10, 10, 10];
+const SEAT_COUNTS = [8, 10, 10, 10, 10, 10, 10, 10, 8];
 
-// ── Geometry (mirrors SeatingMap exactly) ────────────────────────────────────
 const cos45 = Math.cos(Math.PI / 4);
 const sin45 = Math.sin(Math.PI / 4);
 
@@ -32,8 +31,8 @@ function chairs45_8(cx, cy, dir = 1) {
   const offsets = [
     [-45, -152], [45, -152],
     [-45,  152], [45,  152],
-    [-102, -45], [-102, 45],
-    [ 102, -45], [ 102, 45],
+    [-102, -65], [-102, 65],
+    [ 102, -65], [ 102, 65],
   ];
   return offsets.map(([dx, dy]) => {
     const [rx, ry] = rotated(dx, dy, dir);
@@ -50,7 +49,7 @@ function chairsHead(cx, cy) {
   ];
 }
 
-function nameLabel(chair, cx, cy) {
+function chipPos(chair, cx, cy) {
   const dx = chair.x - cx;
   const dy = chair.y - cy;
   const len = Math.sqrt(dx * dx + dy * dy);
@@ -71,87 +70,113 @@ const TABLE_LAYOUT = [
   { idx: 5, cx:  250, cy: 1220, type: 'guest', dir: -1 },
   { idx: 6, cx: 1550, cy: 1220, type: 'guest', dir:  1 },
   { idx: 7, cx:  250, cy: 1740, type: 'guest', dir: -1 },
-  { idx: 8, cx: 1550, cy: 1740, type: 'guest', dir:  1 },
+  { idx: 8, cx: 1550, cy: 1740, type: 'guest8', dir:  1 },
 ];
 
-// ── Name chip rendered inside SVG foreignObject ──────────────────────────────
-function NameChip({ tableIdx, seatIdx, guest, dragging, dragOver, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onUpdate, label }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(guest);
+function emptySeat() {
+  return { name: '', dietary: '', highchairAfter: false };
+}
 
-  const isDragging = dragging?.ti === tableIdx && dragging?.si === seatIdx;
-  const isOver = dragOver?.ti === tableIdx && dragOver?.si === seatIdx;
+// Returns gaps between chairs in clockwise perimeter order.
+// Each gap has the midpoint position and the seatIdx that "owns" it (highchairAfter).
+function perimeterGaps(chairs, cx, cy) {
+  const sorted = chairs
+    .map((c, i) => ({ c, i, angle: Math.atan2(c.y - cy, c.x - cx) }))
+    .sort((a, b) => a.angle - b.angle);
+  return sorted.map((item, pi) => {
+    const next = sorted[(pi + 1) % sorted.length];
+    return {
+      seatIdx: item.i,
+      mid: { x: (item.c.x + next.c.x) / 2, y: (item.c.y + next.c.y) / 2 },
+    };
+  });
+}
 
-  // foreignObject is 160×44 SVG units, anchored so chip is centered on label point
-  const W = 160, H = 44;
-  const x = label.anchor === 'end' ? label.x - W : label.anchor === 'start' ? label.x : label.x - W / 2;
-  const y = label.y - H / 2;
+function HighchairToggle({ gap, active, onToggle }) {
+  const { mid, seatIdx } = gap;
+  return (
+    <g onClick={() => onToggle(seatIdx)} style={{ cursor: 'pointer' }}>
+      <circle cx={mid.x} cy={mid.y} r={14}
+        fill={active ? PRIMARY : CREAM}
+        stroke={PRIMARY} strokeWidth={1.5}
+        strokeDasharray={active ? 'none' : '3 2'}
+      />
+      {active ? (
+        <text x={mid.x} y={mid.y + 5} textAnchor="middle" fontSize={16} style={{ userSelect: 'none' }}>👶</text>
+      ) : (
+        <>
+          <line x1={mid.x - 6} y1={mid.y} x2={mid.x + 6} y2={mid.y} stroke={PRIMARY} strokeWidth={1.5} strokeLinecap="round" />
+          <line x1={mid.x} y1={mid.y - 6} x2={mid.x} y2={mid.y + 6} stroke={PRIMARY} strokeWidth={1.5} strokeLinecap="round" />
+        </>
+      )}
+    </g>
+  );
+}
 
-  function commit() {
-    setEditing(false);
-    onUpdate(tableIdx, seatIdx, value.trim());
-  }
+function SeatChip({ ti, si, seat, isSelected, isDragging, isDropTarget, onSelect, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, chair, cx, cy }) {
+  const W = 160;
+  const H = seat.dietary ? 64 : 44;
+  const pos = chipPos(chair, cx, cy);
+  const x = pos.anchor === 'end' ? pos.x - W : pos.anchor === 'start' ? pos.x : pos.x - W / 2;
+  const y = pos.y - H / 2;
 
-  const chipStyle = {
-    width: '100%', height: '100%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxSizing: 'border-box',
-    border: isOver
-      ? `2px dashed ${PRIMARY}`
-      : guest ? `1.5px solid ${PRIMARY}` : `1.5px dashed rgba(165,18,38,0.4)`,
-    borderRadius: '4px',
-    background: isOver ? 'rgba(165,18,38,0.12)' : guest ? 'rgba(165,18,38,0.07)' : 'transparent',
-    cursor: guest ? 'grab' : 'pointer',
-    opacity: isDragging ? 0.3 : 1,
-    fontFamily: 'Lora, serif',
-    fontSize: '13px',
-    color: guest ? PRIMARY : 'rgba(165,18,38,0.4)',
-    fontStyle: guest ? 'normal' : 'italic',
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-    padding: '0 6px',
-    userSelect: 'none',
-  };
+  const bg = isDropTarget ? 'rgba(165,18,38,0.18)'
+    : isSelected ? 'rgba(165,18,38,0.15)'
+    : seat.dietary ? 'rgba(165,18,38,0.09)'
+    : seat.name ? 'rgba(165,18,38,0.04)'
+    : 'transparent';
+
+  const border = (isDropTarget || isSelected)
+    ? `2.5px solid ${PRIMARY}`
+    : seat.name ? `1.5px solid ${PRIMARY}`
+    : `1.5px dashed rgba(165,18,38,0.35)`;
 
   return (
     <foreignObject x={x} y={y} width={W} height={H} style={{ overflow: 'visible' }}>
-      {editing ? (
-        <input
-          autoFocus
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
-          style={{
-            width: '100%', height: '100%', boxSizing: 'border-box',
-            border: `2px solid ${PRIMARY}`, borderRadius: '4px',
-            fontFamily: 'Lora, serif', fontSize: '13px', color: PRIMARY,
-            background: CREAM, outline: 'none', padding: '0 6px',
-          }}
-        />
-      ) : (
-        <div
-          draggable={!!guest}
-          onDragStart={() => guest && onDragStart(tableIdx, seatIdx)}
-          onDragEnd={onDragEnd}
-          onDragOver={e => { e.preventDefault(); onDragOver(tableIdx, seatIdx); }}
-          onDragLeave={onDragLeave}
-          onDrop={e => { e.preventDefault(); onDrop(tableIdx, seatIdx); }}
-          onClick={() => { setEditing(true); setValue(guest); }}
-          title={guest ? 'Klicka för att redigera, dra för att flytta' : 'Klicka för att lägga till'}
-          style={chipStyle}
-        >
-          {guest || '+ lägg till'}
-        </div>
-      )}
+      <div
+        draggable={!!seat.name}
+        onDragStart={() => seat.name && onDragStart(ti, si)}
+        onDragEnd={onDragEnd}
+        onDragOver={e => { e.preventDefault(); onDragOver(ti, si); }}
+        onDragLeave={onDragLeave}
+        onDrop={e => { e.preventDefault(); onDrop(ti, si); }}
+        onClick={() => onSelect(ti, si)}
+        title={seat.name ? 'Klicka för att redigera, dra för att flytta' : 'Klicka för att lägga till'}
+        style={{
+          width: '100%', height: '100%',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          boxSizing: 'border-box', gap: '2px',
+          border, borderRadius: '4px', background: bg,
+          cursor: seat.name ? 'grab' : 'pointer',
+          opacity: isDragging ? 0.3 : 1,
+          padding: '4px 8px', userSelect: 'none',
+        }}
+      >
+        <span style={{
+          fontFamily: 'Lora, serif', fontSize: '13px', color: PRIMARY,
+          fontWeight: isSelected ? '700' : '400',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '144px',
+        }}>
+          {seat.name || '+ lägg till'}
+        </span>
+        {seat.dietary && (
+          <span style={{
+            fontFamily: 'Lora, serif', fontSize: '11px', color: PRIMARY,
+            fontStyle: 'italic', opacity: 0.8,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '144px',
+          }}>
+            {seat.dietary}
+          </span>
+        )}
+      </div>
     </foreignObject>
   );
 }
 
-// ── Table shapes ─────────────────────────────────────────────────────────────
-function TableShape({ layout, chairList, children }) {
+function TableGroup({ layout, table, selected, dragging, dragOver, handlers, onToggleHighchair }) {
   const { cx, cy, dir = 1, type } = layout;
+  const chairList = type === 'head' ? chairsHead(cx, cy) : type === 'guest8' ? chairs45_8(cx, cy, dir) : chairs45(cx, cy, dir);
 
   return (
     <g>
@@ -169,41 +194,132 @@ function TableShape({ layout, chairList, children }) {
       <text x={cx} y={cy + 9} textAnchor="middle"
         fontSize={22} fontFamily="Lora, serif" fill={PRIMARY} fontWeight="700"
         style={{ pointerEvents: 'none' }}>
-        {layout.tableName}
+        {table.name}
       </text>
-      {children}
+      {chairList.map((chair, si) => (
+        <SeatChip
+          key={si} ti={layout.idx} si={si}
+          seat={table.seats[si] ?? emptySeat()}
+          isSelected={selected?.ti === layout.idx && selected?.si === si}
+          isDragging={dragging?.ti === layout.idx && dragging?.si === si}
+          isDropTarget={dragOver?.ti === layout.idx && dragOver?.si === si}
+          chair={chair} cx={cx} cy={cy}
+          {...handlers}
+        />
+      ))}
+      {perimeterGaps(chairList, cx, cy).map((gap) => (
+        <HighchairToggle
+          key={`hc-${gap.seatIdx}`}
+          gap={gap}
+          active={!!table.seats[gap.seatIdx]?.highchairAfter}
+          onToggle={(seatIdx) => onToggleHighchair(layout.idx, seatIdx)}
+        />
+      ))}
     </g>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+function EditPanel({ tables, selected, onChange, onClose }) {
+  if (!selected) return null;
+  const { ti, si } = selected;
+  const table = tables[ti];
+  const seat = table.seats[si] ?? emptySeat();
+
+  return (
+    <div style={{
+      maxWidth: '500px', margin: '2rem auto 0',
+      border: `2px solid ${PRIMARY}`, borderRadius: '6px', padding: '1.5rem',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <h3 style={{ margin: 0, padding: 0, fontSize: '1.25rem' }}>
+          {table.name} — plats {si + 1}
+        </h3>
+        <button onClick={onClose} style={{ width: 'auto', margin: 0, padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}>
+          Klar
+        </button>
+      </div>
+      <label style={{ display: 'block', marginBottom: '1rem' }}>
+        <span style={{ fontFamily: 'Lora, serif', fontSize: '0.9rem', display: 'block', marginBottom: '0.35rem' }}>Namn</span>
+        <input
+          type="text"
+          value={seat.name}
+          placeholder="Gästens namn"
+          onChange={e => onChange(ti, si, 'name', e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box' }}
+        />
+      </label>
+      <label style={{ display: 'block' }}>
+        <span style={{ fontFamily: 'Lora, serif', fontSize: '0.9rem', display: 'block', marginBottom: '0.35rem' }}>Allergier / specialkost</span>
+        <input
+          type="text"
+          value={seat.dietary}
+          placeholder="T.ex. glutenfri, vegan, nötallergi..."
+          onChange={e => onChange(ti, si, 'dietary', e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box' }}
+        />
+      </label>
+    </div>
+  );
+}
+
 export default function SeatingAdmin() {
   const [authed, setAuthed] = useState(false);
   const [attempt, setAttempt] = useState('');
   const [loginError, setLoginError] = useState('');
   const [tables, setTables] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const tablesRef = useRef([]);
+  const [saveState, setSaveState] = useState('idle');
+  const [selected, setSelected] = useState(null);
   const [dragging, setDragging] = useState(null);
   const [dragOver, setDragOver] = useState(null);
 
+  useEffect(() => { tablesRef.current = tables; }, [tables]);
+
   useEffect(() => {
     if (!authed) return;
-    getSupabase().from('seating').select('id, table_name, guests').order('id').then(({ data }) => {
-      if (data) {
-        setTables(data.map((r, i) => {
-          const seats = SEAT_COUNTS[i] ?? 10;
-          const guests = [...(r.guests ?? [])];
-          while (guests.length < seats) guests.push('');
-          return { id: r.id, name: r.table_name, guests };
-        }));
-      }
-    });
+    getSupabase()
+      .from('seating')
+      .select('id, table_name, seat_data')
+      .order('id')
+      .then(({ data, error }) => {
+        if (error) { console.error(error); return; }
+        if (data) {
+          setTables(data.map((r, i) => {
+            const count = SEAT_COUNTS[i] ?? 10;
+            const seats = [...(r.seat_data ?? [])];
+            while (seats.length < count) seats.push(emptySeat());
+            return { id: r.id, name: r.table_name, seats };
+          }));
+        }
+      });
   }, [authed]);
 
   function login() {
     if (attempt === ADMIN_PASSWORD) { setAuthed(true); setLoginError(''); }
     else setLoginError('Fel lösenord.');
+  }
+
+  async function saveTable(ti) {
+    const tableData = tablesRef.current[ti];
+    if (!tableData) return;
+    setSaveState('saving');
+    const seat_data = tableData.seats.map(s => ({
+      name: s.name.trim(),
+      dietary: s.dietary.trim(),
+      highchairAfter: s.highchairAfter ?? false,
+    }));
+    const { error } = await getSupabase()
+      .from('seating')
+      .update({ seat_data })
+      .eq('id', tableData.id);
+    if (error) { console.error(error); setSaveState('error'); }
+    else setSaveState('saved');
+    setTimeout(() => setSaveState('idle'), 2000);
+  }
+
+  function onSelect(ti, si) {
+    if (selected) saveTable(selected.ti);
+    setSelected(prev => (prev?.ti === ti && prev?.si === si) ? null : { ti, si });
   }
 
   function onDragStart(ti, si) { setDragging({ ti, si }); }
@@ -213,34 +329,38 @@ export default function SeatingAdmin() {
 
   function onDrop(ti, si) {
     if (!dragging) return;
+    const src = { ...dragging };
     setDragging(null); setDragOver(null);
-    if (dragging.ti === ti && dragging.si === si) return;
+    if (src.ti === ti && src.si === si) return;
     setTables(prev => {
-      const next = prev.map(t => ({ ...t, guests: [...t.guests] }));
-      const src = next[dragging.ti].guests[dragging.si];
-      const dst = next[ti].guests[si] ?? '';
-      next[dragging.ti].guests[dragging.si] = dst;
-      next[ti].guests[si] = src;
+      const next = prev.map(t => ({ ...t, seats: t.seats.map(s => ({ ...s })) }));
+      const srcSeat = { ...next[src.ti].seats[src.si] };
+      const dstSeat = { ...next[ti].seats[si] };
+      next[src.ti].seats[src.si] = dstSeat;
+      next[ti].seats[si] = srcSeat;
       return next;
     });
-    setSaved(false);
+    setTimeout(() => {
+      saveTable(src.ti);
+      if (ti !== src.ti) saveTable(ti);
+    }, 0);
   }
 
-  function onUpdate(ti, si, value) {
+  function onChange(ti, si, field, value) {
     setTables(prev => {
-      const next = prev.map(t => ({ ...t, guests: [...t.guests] }));
-      next[ti].guests[si] = value;
+      const next = prev.map(t => ({ ...t, seats: t.seats.map(s => ({ ...s })) }));
+      next[ti].seats[si][field] = value;
       return next;
     });
-    setSaved(false);
   }
 
-  async function save() {
-    setSaving(true);
-    for (const table of tables) {
-      await getSupabase().from('seating').update({ guests: table.guests.map(g => g.trim()) }).eq('id', table.id);
-    }
-    setSaving(false); setSaved(true);
+  function onToggleHighchair(ti, si) {
+    setTables(prev => {
+      const next = prev.map(t => ({ ...t, seats: t.seats.map(s => ({ ...s })) }));
+      next[ti].seats[si].highchairAfter = !next[ti].seats[si].highchairAfter;
+      return next;
+    });
+    setTimeout(() => saveTable(ti), 0);
   }
 
   if (!authed) {
@@ -259,7 +379,7 @@ export default function SeatingAdmin() {
     );
   }
 
-  const chipHandlers = { onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onUpdate };
+  const mapHandlers = { onSelect, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop };
 
   return (
     <div>
@@ -272,41 +392,27 @@ export default function SeatingAdmin() {
         <svg viewBox="-120 -60 2040 2100" xmlns="http://www.w3.org/2000/svg"
           style={{ width: '100%', minWidth: '700px', display: 'block' }}>
           <rect x={-120} y={-60} width={2040} height={2100} fill={CREAM} />
-
           {TABLE_LAYOUT.map((layout) => {
             const table = tables[layout.idx];
             if (!table) return null;
-            const { cx, cy, type, dir } = layout;
-            const chairList = type === 'head' ? chairsHead(cx, cy) : chairs45(cx, cy, dir);
-
             return (
-              <TableShape key={layout.idx} layout={{ ...layout, tableName: table.name }} chairList={chairList}>
-                {chairList.map((chair, si) => {
-                  const label = nameLabel(chair, cx, cy);
-                  return (
-                    <NameChip
-                      key={si}
-                      tableIdx={layout.idx}
-                      seatIdx={si}
-                      guest={table.guests[si] ?? ''}
-                      label={label}
-                      dragging={dragging}
-                      dragOver={dragOver}
-                      {...chipHandlers}
-                    />
-                  );
-                })}
-              </TableShape>
+              <TableGroup key={layout.idx} layout={layout} table={table}
+                selected={selected} dragging={dragging} dragOver={dragOver}
+                handlers={mapHandlers} onToggleHighchair={onToggleHighchair} />
             );
           })}
         </svg>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '2rem', paddingBottom: '3rem' }}>
-        <button onClick={save} disabled={saving} style={{ maxWidth: 280 }}>
-          {saving ? 'Sparar...' : 'Spara alla ändringar'}
-        </button>
-        {saved && <p style={{ marginTop: '0.75rem', fontSize: '0.9rem' }}>Sparat!</p>}
+      <EditPanel
+        tables={tables} selected={selected} onChange={onChange}
+        onClose={() => { if (selected) saveTable(selected.ti); setSelected(null); }}
+      />
+
+      <div style={{ textAlign: 'center', marginTop: '2rem', paddingBottom: '3rem', minHeight: '2rem' }}>
+        {saveState === 'saving' && <p style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>Sparar...</p>}
+        {saveState === 'saved' && <p style={{ fontSize: '0.9rem' }}>Sparat!</p>}
+        {saveState === 'error' && <p style={{ fontSize: '0.9rem', color: 'red' }}>Fel vid sparning — kontrollera konsolen.</p>}
       </div>
     </div>
   );
